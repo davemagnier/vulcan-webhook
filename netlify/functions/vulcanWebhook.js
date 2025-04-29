@@ -1,12 +1,17 @@
 exports.handler = async (event) => {
   try {
-    let bodyData;
+    let bodyData = {};
 
-    if (event.isBase64Encoded) {
-      const buff = Buffer.from(event.body, 'base64');
-      bodyData = JSON.parse(buff.toString('utf-8'));
-    } else {
-      bodyData = event.body ? JSON.parse(event.body) : {};
+    if (event.body) {
+      try {
+        bodyData = JSON.parse(event.body);
+      } catch (error) {
+        console.error("Failed to parse JSON body:", error);
+        return {
+          statusCode: 400,
+          body: JSON.stringify({ success: false, error: "Invalid JSON body" })
+        };
+      }
     }
 
     const wallet = bodyData.wallet?.toLowerCase();
@@ -35,8 +40,8 @@ exports.handler = async (event) => {
       body: JSON.stringify({ success: true })
     };
 
-  } catch (err) {
-    console.error("Webhook failed:", err);
+  } catch (error) {
+    console.error("Webhook failed:", error);
     return {
       statusCode: 500,
       body: JSON.stringify({ success: false, error: "Server error" })
